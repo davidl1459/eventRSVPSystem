@@ -1,0 +1,87 @@
+.admin-header {
+    background-color: #007ACC;
+    color: white;
+    padding: 20px;
+    font-weight: bold;
+    font-size: 30px;
+  }
+  
+  .admin-layout {
+    display: flex;
+    height: calc(100vh - 70px);
+  }
+  
+  .admin-sidebar {
+    width: 200px;
+    background-color: #001f3f;
+    display: flex;
+    flex-direction: column;
+    padding-top: 30px;
+  }
+  
+  .admin-sidebar a {
+    color: white;
+    padding: 15px 20px;
+    font-size: 18px;
+    text-decoration: none;
+  }
+  
+  .admin-sidebar a:hover {
+    background-color: #003366;
+  }
+  
+  .admin-main {
+    flex-grow: 1;
+    background-color: #f4f4f4;
+    padding: 40px;
+  }
+  
+  .section-title {
+    font-size: 26px;
+    margin-bottom: 20px;
+  }
+  
+  /* Removed blue background here */
+  .table-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .event-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: transparent;
+  }
+  
+  .event-table th,
+  .event-table td {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 1px solid #ccc;
+    font-size: 16px;
+  }
+  
+  .event-table th {
+    background-color: #e0e0e0;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .filter-wrapper {
+    font-size: 16px;
+  }
+  
+  .filter-dropdown {
+    margin-left: 10px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  

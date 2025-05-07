@@ -1,0 +1,65 @@
+/* Header bar */
+.admin-header {
+    background-color: #007ACC;
+    color: white;
+    padding: 15px 20px;
+    font-weight: bold;
+    font-size: 40px;
+  }
+  
+  /* Centered container */
+  .admin-login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: calc(100vh - 60px);
+    background-color: #f4f4f4;
+  }
+  
+  /* Form card */
+  .admin-login-form {
+    background-color: #ddd;
+    padding: 30px;
+    width: 300px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Form group spacing */
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 30px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 20px;
+  }
+  
+  /* Button styling */
+  .login-button {
+    background-color: #007ACC;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    width: 150px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+.button-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  
+  
