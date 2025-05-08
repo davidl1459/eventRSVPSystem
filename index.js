@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const attendanceRoute = require('./routes/attendance');
 
 const inviteRoute = require('./routes/invite');
 const guestRoute = require('./routes/guest');
@@ -21,9 +22,10 @@ app.use('/guest', guestRoute);
 app.use('/rsvp', rsvpRoute);
 app.use('/events', eventsRoute);
 app.use('/admin', adminRoute);
+app.use('/attendance', attendanceRoute);
 
 app.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}`);
+  console.log(` Server running at http://localhost:${port}`);
 });
 
 

@@ -1,34 +1,31 @@
 import React, { createContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 export const EventContext = createContext();
 
 export const EventProvider = ({ children }) => {
-  const [events, setEvents] = useState(() => {
-    const stored = localStorage.getItem('events');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem('events', JSON.stringify(events));
-  }, [events]);
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/events`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        setEvents(res.data);
+      } catch (err) {
+        console.error('Failed to fetch events:', err);
+      }
+    };
 
-  const addEvent = (newEvent) => {
-    const eventWithId = { ...newEvent, id: Date.now(), attendees: [] };
-    setEvents(prev => [...prev, eventWithId]);
-  };
-
-  const addAttendee = (eventId, attendee) => {
-    setEvents(prevEvents =>
-      prevEvents.map(event =>
-        event.id === parseInt(eventId)
-          ? { ...event, attendees: [...event.attendees, attendee] }
-          : event
-      )
-    );
-  };
+    fetchEvents();
+  }, []);
 
   return (
-    <EventContext.Provider value={{ events, addEvent, addAttendee }}>
+    <EventContext.Provider value={{ events }}>
       {children}
     </EventContext.Provider>
   );

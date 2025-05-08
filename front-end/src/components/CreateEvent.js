@@ -1,37 +1,51 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './CreateEvent.css';
-import { EventContext } from '../context/EventContext';
 
 const CreateEvent = () => {
   const [formData, setFormData] = useState({
-    name: '',
+    title: '',
     description: '',
-    datetime: '',
+    date: '',
+    time: '',
     location: ''
   });
 
-  const { addEvent } = useContext(EventContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newEvent = {
-      name: formData.name,
-      date: formData.datetime,
-      location: formData.location,
-      description: formData.description
-    };
-    addEvent(newEvent);
-    alert('Event created successfully!');
-    navigate('/dashboard');
+    const token = localStorage.getItem('token');
+
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/events`, {
+        organizer_id: 3, // optionally parse this from JWT later
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        time: formData.time,
+        location: formData.location
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      alert('Event created successfully!');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Error creating event:', err);
+      alert('Failed to create event');
+    }
   };
 
   return (
@@ -41,6 +55,7 @@ const CreateEvent = () => {
         <div className="admin-sidebar">
           <Link to="/dashboard">Home</Link>
           <Link to="/create">Create Event</Link>
+          <Link to="/invite">Invite Guests</Link>
           <Link to="/login">Logout</Link>
         </div>
 
@@ -49,8 +64,8 @@ const CreateEvent = () => {
             <label>Event Name</label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
+              name="title"
+              value={formData.title}
               onChange={handleChange}
               required
             />
@@ -64,11 +79,20 @@ const CreateEvent = () => {
               required
             />
 
-            <label>Date & Time</label>
+            <label>Date</label>
             <input
-              type="datetime-local"
-              name="datetime"
-              value={formData.datetime}
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              required
+            />
+
+            <label>Time</label>
+            <input
+              type="time"
+              name="time"
+              value={formData.time}
               onChange={handleChange}
               required
             />

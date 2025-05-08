@@ -1,0 +1,91 @@
+/* Wrapper */
+.invites-wrapper {
+    padding: 40px;
+    background-color: #f4f4f4;
+    min-height: 100vh;
+  }
+  
+  /* Section headers */
+  .section-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .section-subtitle {
+    font-size: 22px;
+    margin: 30px 0 15px 0;
+  }
+  
+  /* Dropdown style */
+  .filter-dropdown {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    min-width: 250px;
+  }
+  
+  /* Button style */
+  .create-btn {
+    background-color: #007ACC;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .create-btn:hover {
+    background-color: #005fa3;
+  }
+  
+  /* Table */
+  .event-table {
+    width: 100%;
+    background-color: white;
+    border-collapse: collapse;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .event-table th,
+  .event-table td {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: left;
+  }
+  
+  .event-table th {
+    background-color: #e0e0e0;
+    font-weight: bold;
+  }
+  
+  /* Copy button & input */
+  .copy-link-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .copy-btn {
+    background-color: #007ACC;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .copy-btn:hover {
+    background-color: #005fa3;
+  }
+  
+  .copy-success {
+    font-size: 12px;
+    color: green;
+  }
+  

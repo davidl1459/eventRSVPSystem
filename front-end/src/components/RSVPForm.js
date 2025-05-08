@@ -1,65 +1,141 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import './Form.css';
-import { EventContext } from '../context/EventContext';
 
 const RSVPForm = () => {
-  const { events, addAttendee } = useContext(EventContext);
   const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState('Yes');
   const [comment, setComment] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get('token');
 
-  const eventId = searchParams.get('eventId');
-  const guestName = searchParams.get('name') || 'Guest';
-  const gender = searchParams.get('gender') || '';
-  const status = searchParams.get('status') || '';
+  let eventId = '';
+  let guestName = '';
+  let gender = '';
+  let status = '';
 
-  const event = events.find(e => e.id === parseInt(eventId));
-
-  // Prefix logic
-  let prefix = '';
-  if (gender.toLowerCase() === 'male') prefix = 'Mr.';
-  else if (gender.toLowerCase() === 'female') {
-    prefix = status.toLowerCase() === 'married' ? 'Mrs.' : 'Miss';
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      eventId = decoded.eventId || decoded.event_id;
+      guestName = decoded.name;
+      gender = decoded.gender;
+      status = decoded.status;
+    } catch (err) {
+      console.error('Invalid token:', err);
+    }
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const attendee = {
-      name: `${prefix} ${guestName}`,
-      email,
-      attendance,
-      comment
-    };
+  let prefix = '';
+  if (gender?.toLowerCase() === 'male') prefix = 'Mr.';
+  else if (gender?.toLowerCase() === 'female') {
+    prefix = status === 'married' ? 'Mrs.' : 'Miss';
+  }
 
-    if (eventId) {
-      addAttendee(eventId, attendee);
-      alert('RSVP submitted successfully!');
-    } else {
-      alert('Error: Event ID is missing.');
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!eventId) return;
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/events/${eventId}`);
+        setSelectedEvent(res.data);
+      } catch (err) {
+        console.error('Failed to fetch event:', err);
+        setSelectedEvent(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvent();
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const eventDateTime = new Date(`${selectedEvent.date}T${selectedEvent.time}`);
+    const now = new Date();
+
+    if (eventDateTime < now) {
+      setIsExpired(true);
+    }
+  }, [selectedEvent]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!token || !eventId) {
+      alert('Missing or invalid token.');
+      return;
     }
 
-    // Clear form (optional)
-    setEmail('');
-    setComment('');
-    setAttendance('Yes');
+    if (isExpired) {
+      alert('This event has already passed!');
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/rsvp/${token}`, {
+        event_id: eventId,
+        email,
+        response: attendance === 'Yes',
+        comment
+      });
+
+      if (res.status === 200) {
+        setSubmitted(true);
+      } else {
+        console.error('Unexpected response:', res);
+        alert('Unexpected server response.');
+      }
+    } catch (err) {
+      if (err.response?.status === 409) {
+        alert('You have already RSVP’d for this event.');
+      } else {
+        console.error('Failed to submit RSVP:', err);
+        alert('Submission failed. Please try again.');
+      }
+    }
   };
+
+  if (loading) {
+    return <div className="rsvp-container"><p>⏳ Loading event details...</p></div>;
+  }
+
+  if (!selectedEvent) {
+    return <div className="rsvp-container"><p>Event not found or the link is invalid.</p></div>;
+  }
+
+  if (isExpired) {
+    return <div className="rsvp-container"><p> This event has already passed. RSVP is closed.</p></div>;
+  }
+
+  if (submitted) {
+    return (
+      <div className="rsvp-container">
+        <div className="rsvp-left">
+          <h2>Thank you, {prefix} {guestName}!</h2>
+          <p>Your RSVP has been recorded.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rsvp-container">
       <div className="rsvp-left">
         <h2>{prefix} {guestName},</h2>
-        <p>you are invited to attend:</p>
-        <h3>{event ? event.name : 'Event Not Found'}</h3>
-        <p className="event-description">
-          Please confirm your attendance by filling out the form.
-        </p>
-        <p className="event-location">{event?.location || '-'}</p>
+        <p>You are invited to attend:</p>
+        <h3>{selectedEvent.title}</h3>
+        <p className="event-description">{selectedEvent.description || '-'}</p>
+        <p className="event-location">{selectedEvent.location || '-'}</p>
         <p className="event-date-time">
-          {event?.date ? `${event.date.split('T')[0]} - ${event.date.split('T')[1]}` : '-'}
+          {selectedEvent.date} - {selectedEvent.time?.slice(0, 5)}
         </p>
       </div>
 
