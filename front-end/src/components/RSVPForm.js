@@ -80,7 +80,11 @@ const RSVPForm = () => {
       }
     } catch (err) {
       console.error('Failed to submit RSVP:', err);
-      alert('Submission failed. Please try again.');
+      if (err.response?.status === 409) {
+        alert('❗ You have already RSVP’d for this event.');
+      } else {
+        alert('Submission failed. Please try again.');
+      }
     }
   };
 

@@ -1,23 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
-const jwt = require('jsonwebtoken');
 
-// POST /rsvp/:token
+// POST /rsvp/:token — Submit RSVP
 router.post('/:token', async (req, res) => {
   const { token } = req.params;
-  const { email, response, comment } = req.body;
+  const { event_id, email, response, comment } = req.body;
+
+  if (!event_id || !token) {
+    return res.status(400).json({ success: false, message: 'Missing token or event ID' });
+  }
 
   try {
-    // Decode token to get event_id
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const event_id = decoded.event_id;
-
-    if (!event_id) {
-      return res.status(400).json({ success: false, message: 'Invalid token payload' });
-    }
-
-    // Look up guest by token only
+    // 1. Find guest by token
     const [guests] = await db.execute('SELECT * FROM Guest WHERE token = ?', [token]);
     if (guests.length === 0) {
       return res.status(404).json({ success: false, message: 'Invalid RSVP token' });
@@ -25,12 +20,22 @@ router.post('/:token', async (req, res) => {
 
     const guest = guests[0];
 
-    // Optional: update email if newly provided
+    // 2. Optional: Update guest's email if provided
     if (email && email !== guest.email) {
       await db.execute('UPDATE Guest SET email = ? WHERE guest_id = ?', [email, guest.guest_id]);
     }
 
-    // Insert attendance
+    // 3. Check if already RSVP’d for the event
+    const [existing] = await db.execute(
+      'SELECT * FROM Attendance WHERE guest_id = ? AND event_id = ?',
+      [guest.guest_id, event_id]
+    );
+
+    if (existing.length > 0) {
+      return res.status(409).json({ success: false, message: 'You have already RSVP’d for this event' });
+    }
+
+    // 4. Insert into Attendance table
     await db.execute(
       `INSERT INTO Attendance (guest_id, event_id, response, comment, timestamp)
        VALUES (?, ?, ?, ?, NOW())`,
@@ -39,13 +44,6 @@ router.post('/:token', async (req, res) => {
 
     res.status(200).json({ success: true, message: 'RSVP submitted successfully' });
   } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      return res.status(401).json({ success: false, message: 'RSVP link expired' });
-    }
-    if (err.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ success: false, message: 'You have already RSVP’d' });
-    }
-
     console.error('RSVP error:', err);
     res.status(500).json({ success: false, message: 'Failed to submit RSVP' });
   }
