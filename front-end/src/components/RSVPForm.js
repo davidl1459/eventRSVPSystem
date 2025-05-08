@@ -1,15 +1,16 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
+import axios from 'axios';
 import './Form.css';
-import { EventContext } from '../context/EventContext';
 
 const RSVPForm = () => {
-  const { events, addAttendee } = useContext(EventContext);
   const [email, setEmail] = useState('');
   const [attendance, setAttendance] = useState('Yes');
   const [comment, setComment] = useState('');
-
+  const [submitted, setSubmitted] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -23,7 +24,7 @@ const RSVPForm = () => {
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      eventId = decoded.eventId;
+      eventId = decoded.eventId || decoded.event_id;
       guestName = decoded.name;
       gender = decoded.gender;
       status = decoded.status;
@@ -32,48 +33,85 @@ const RSVPForm = () => {
     }
   }
 
+  // Prefix logic
   let prefix = '';
   if (gender.toLowerCase() === 'male') prefix = 'Mr.';
   else if (gender.toLowerCase() === 'female') {
     prefix = status === 'married' ? 'Mrs.' : 'Miss';
   }
 
-  const selectedEvent = events.find(e => e.id === parseInt(eventId));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const attendee = {
-      name: `${prefix} ${guestName}`,
-      email,
-      attendance,
-      comment
+  // Fetch event from backend
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!eventId) return;
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/events/${eventId}`);
+        setSelectedEvent(res.data);
+      } catch (err) {
+        console.error('Failed to fetch event:', err);
+        setSelectedEvent(null);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchEvent();
+  }, [eventId]);
 
-    if (eventId) {
-      addAttendee(eventId, attendee);
-      alert('RSVP submitted!');
-    } else {
-      alert('Invalid or missing event ID.');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!token || !eventId) {
+      alert('Missing or invalid token.');
+      return;
     }
 
-    setEmail('');
-    setAttendance('Yes');
-    setComment('');
+    try {
+      await axios.post(`${process.env.REACT_APP_API_URL}/rsvp/${token}`, {
+        event_id: eventId,
+        email,
+        response: attendance === 'Yes',
+        comment
+      });
+
+      setSubmitted(true);
+    } catch (err) {
+      console.error('Failed to submit RSVP:', err);
+      alert('Submission failed. Please try again.');
+    }
   };
+
+  if (loading) {
+    return <div className="rsvp-container"><p>⏳ Loading event details...</p></div>;
+  }
+
+  if (!selectedEvent) {
+    return <div className="rsvp-container"><p>❌ Event not found or the link is invalid.</p></div>;
+  }
+
+  if (submitted) {
+    return (
+      <div className="rsvp-container">
+        <div className="rsvp-left">
+          <h2>Thank you, {prefix} {guestName}!</h2>
+          <p>Your RSVP has been recorded.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rsvp-container">
       <div className="rsvp-left">
         <h2>{prefix} {guestName},</h2>
-        <p>you are invited to attend:</p>
-        <h3>{selectedEvent?.name || 'Event Not Found'}</h3>
-        <p className="event-description">Please confirm your attendance by submitting the form.</p>
-        <p className="event-location">{selectedEvent?.location || '-'}</p>
+        <p>You are invited to attend:</p>
+        <h3>{selectedEvent.title}</h3>
+        <p className="event-description">{selectedEvent.description || '-'}</p>
+        <p className="event-location">{selectedEvent.location || '-'}</p>
         <p className="event-date-time">
-          {selectedEvent?.date
-            ? `${selectedEvent.date.split('T')[0]} - ${selectedEvent.date.split('T')[1]}`
-            : '-'}
+          {selectedEvent?.date && selectedEvent?.time ? (
+            `${new Date(selectedEvent.date).toLocaleDateString()} - ${selectedEvent.time.slice(0, 5)}`
+          ) : '-'}
         </p>
+
       </div>
 
       <form className="rsvp-right" onSubmit={handleSubmit}>

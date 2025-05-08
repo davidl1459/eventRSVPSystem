@@ -3,7 +3,6 @@ const router = express.Router();
 const db = require('../services/db');
 const verifyToken = require('../middleware/auth');
 
-
 // Create a new event
 router.post('/', verifyToken, async (req, res) => {
   const { organizer_id, title, description, date, time, location } = req.body;
@@ -25,8 +24,7 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// Get all events
-
+// Get all events (admin only)
 router.get('/', verifyToken, async (req, res) => {
   try {
     const [events] = await db.execute('SELECT * FROM Event');
@@ -34,6 +32,22 @@ router.get('/', verifyToken, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ success: false, message: 'Failed to fetch events' });
+  }
+});
+
+// 🔥 GET event by ID (for public RSVP)
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await db.execute('SELECT * FROM Event WHERE event_id = ?', [id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error fetching event' });
   }
 });
 
