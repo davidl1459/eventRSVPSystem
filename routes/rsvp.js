@@ -47,6 +47,21 @@ router.post('/:token', async (req, res) => {
     console.error('RSVP error:', err);
     res.status(500).json({ success: false, message: 'Failed to submit RSVP' });
   }
+
+  // Get event details
+const [events] = await db.execute('SELECT * FROM Event WHERE event_id = ?', [event_id]);
+if (events.length === 0) {
+  return res.status(404).json({ success: false, message: 'Event not found' });
+}
+
+const event = events[0];
+const eventDateTime = new Date(`${event.date}T${event.time}`);
+const now = new Date();
+
+if (eventDateTime < now) {
+  return res.status(400).json({ success: false, message: 'The event is already over' });
+}
+
 });
 
 module.exports = router;

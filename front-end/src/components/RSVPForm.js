@@ -11,6 +11,7 @@ const RSVPForm = () => {
   const [submitted, setSubmitted] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
 
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -33,14 +34,12 @@ const RSVPForm = () => {
     }
   }
 
-  // Prefix logic
   let prefix = '';
-  if (gender.toLowerCase() === 'male') prefix = 'Mr.';
-  else if (gender.toLowerCase() === 'female') {
+  if (gender?.toLowerCase() === 'male') prefix = 'Mr.';
+  else if (gender?.toLowerCase() === 'female') {
     prefix = status === 'married' ? 'Mrs.' : 'Miss';
   }
 
-  // Fetch event from backend
   useEffect(() => {
     const fetchEvent = async () => {
       if (!eventId) return;
@@ -57,10 +56,26 @@ const RSVPForm = () => {
     fetchEvent();
   }, [eventId]);
 
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const eventDateTime = new Date(`${selectedEvent.date}T${selectedEvent.time}`);
+    const now = new Date();
+
+    if (eventDateTime < now) {
+      setIsExpired(true);
+    }
+  }, [selectedEvent]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!token || !eventId) {
       alert('Missing or invalid token.');
+      return;
+    }
+
+    if (isExpired) {
+      alert('This event has already passed!');
       return;
     }
 
@@ -71,7 +86,7 @@ const RSVPForm = () => {
         response: attendance === 'Yes',
         comment
       });
-    
+
       if (res.status === 200) {
         setSubmitted(true);
       } else {
@@ -79,10 +94,10 @@ const RSVPForm = () => {
         alert('Unexpected server response.');
       }
     } catch (err) {
-      console.error('Failed to submit RSVP:', err);
       if (err.response?.status === 409) {
-        alert('❗ You have already RSVP’d for this event.');
+        alert('You have already RSVP’d for this event.');
       } else {
+        console.error('Failed to submit RSVP:', err);
         alert('Submission failed. Please try again.');
       }
     }
@@ -93,7 +108,11 @@ const RSVPForm = () => {
   }
 
   if (!selectedEvent) {
-    return <div className="rsvp-container"><p>❌ Event not found or the link is invalid.</p></div>;
+    return <div className="rsvp-container"><p>Event not found or the link is invalid.</p></div>;
+  }
+
+  if (isExpired) {
+    return <div className="rsvp-container"><p> This event has already passed. RSVP is closed.</p></div>;
   }
 
   if (submitted) {
@@ -116,11 +135,8 @@ const RSVPForm = () => {
         <p className="event-description">{selectedEvent.description || '-'}</p>
         <p className="event-location">{selectedEvent.location || '-'}</p>
         <p className="event-date-time">
-          {selectedEvent?.date && selectedEvent?.time ? (
-            `${new Date(selectedEvent.date).toLocaleDateString()} - ${selectedEvent.time.slice(0, 5)}`
-          ) : '-'}
+          {selectedEvent.date} - {selectedEvent.time?.slice(0, 5)}
         </p>
-
       </div>
 
       <form className="rsvp-right" onSubmit={handleSubmit}>
