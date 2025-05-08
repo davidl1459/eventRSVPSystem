@@ -1,5 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
 import './Form.css';
 import { EventContext } from '../context/EventContext';
 
@@ -9,22 +10,35 @@ const RSVPForm = () => {
   const [attendance, setAttendance] = useState('Yes');
   const [comment, setComment] = useState('');
 
+
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get('token');
 
-  const eventId = searchParams.get('eventId');
-  const guestName = searchParams.get('name') || 'Guest';
-  const gender = searchParams.get('gender') || '';
-  const status = searchParams.get('status') || '';
+  let eventId = '';
+  let guestName = '';
+  let gender = '';
+  let status = '';
 
-  const event = events.find(e => e.id === parseInt(eventId));
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      eventId = decoded.eventId;
+      guestName = decoded.name;
+      gender = decoded.gender;
+      status = decoded.status;
+    } catch (err) {
+      console.error('Invalid token:', err);
+    }
+  }
 
-  // Prefix logic
   let prefix = '';
   if (gender.toLowerCase() === 'male') prefix = 'Mr.';
   else if (gender.toLowerCase() === 'female') {
-    prefix = status.toLowerCase() === 'married' ? 'Mrs.' : 'Miss';
+    prefix = status === 'married' ? 'Mrs.' : 'Miss';
   }
+
+  const selectedEvent = events.find(e => e.id === parseInt(eventId));
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -37,15 +51,14 @@ const RSVPForm = () => {
 
     if (eventId) {
       addAttendee(eventId, attendee);
-      alert('RSVP submitted successfully!');
+      alert('RSVP submitted!');
     } else {
-      alert('Error: Event ID is missing.');
+      alert('Invalid or missing event ID.');
     }
 
-    // Clear form (optional)
     setEmail('');
-    setComment('');
     setAttendance('Yes');
+    setComment('');
   };
 
   return (
@@ -53,13 +66,13 @@ const RSVPForm = () => {
       <div className="rsvp-left">
         <h2>{prefix} {guestName},</h2>
         <p>you are invited to attend:</p>
-        <h3>{event ? event.name : 'Event Not Found'}</h3>
-        <p className="event-description">
-          Please confirm your attendance by filling out the form.
-        </p>
-        <p className="event-location">{event?.location || '-'}</p>
+        <h3>{selectedEvent?.name || 'Event Not Found'}</h3>
+        <p className="event-description">Please confirm your attendance by submitting the form.</p>
+        <p className="event-location">{selectedEvent?.location || '-'}</p>
         <p className="event-date-time">
-          {event?.date ? `${event.date.split('T')[0]} - ${event.date.split('T')[1]}` : '-'}
+          {selectedEvent?.date
+            ? `${selectedEvent.date.split('T')[0]} - ${selectedEvent.date.split('T')[1]}`
+            : '-'}
         </p>
       </div>
 

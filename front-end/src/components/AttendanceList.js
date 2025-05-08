@@ -5,9 +5,10 @@ import { EventContext } from '../context/EventContext';
 
 const AttendanceList = () => {
   const { events } = useContext(EventContext);
-  const [filter, setFilter] = useState('All');
+  const [attendanceFilter, setAttendanceFilter] = useState('All');
+  const [eventFilter, setEventFilter] = useState('All');
 
-  // Combine all attendees with their event name
+  // All attendees with event name
   const allAttendees = events.flatMap(event =>
     event.attendees.map(att => ({
       ...att,
@@ -15,10 +16,17 @@ const AttendanceList = () => {
     }))
   );
 
+  // Apply filters
   const filteredAttendees = allAttendees.filter(att => {
-    if (filter === 'All') return true;
-    return att.attendance === filter;
+    const matchAttendance =
+      attendanceFilter === 'All' || att.attendance === attendanceFilter;
+    const matchEvent =
+      eventFilter === 'All' || att.eventName === eventFilter;
+    return matchAttendance && matchEvent;
   });
+
+  // Get unique event names for filter dropdown
+  const uniqueEventNames = Array.from(new Set(events.map(e => e.name)));
 
   return (
     <div>
@@ -33,18 +41,38 @@ const AttendanceList = () => {
         <div className="admin-main">
           <div className="header-row">
             <h2 className="section-title">All Attendees</h2>
-            <div className="filter-wrapper">
-              <label htmlFor="filter">filter ▾</label>
-              <select
-                id="filter"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="filter-dropdown"
-              >
-                <option value="All">All</option>
-                <option value="Yes">Yes</option>
-                <option value="No">No</option>
-              </select>
+
+            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+              {/* Attendance Filter */}
+              <div className="filter-wrapper">
+                <label htmlFor="attendanceFilter">Attendance: </label>
+                <select
+                  id="attendanceFilter"
+                  value={attendanceFilter}
+                  onChange={(e) => setAttendanceFilter(e.target.value)}
+                  className="filter-dropdown"
+                >
+                  <option value="All">All</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+
+              {/* Event Filter */}
+              <div className="filter-wrapper">
+                <label htmlFor="eventFilter">Event: </label>
+                <select
+                  id="eventFilter"
+                  value={eventFilter}
+                  onChange={(e) => setEventFilter(e.target.value)}
+                  className="filter-dropdown"
+                >
+                  <option value="All">All Events</option>
+                  {uniqueEventNames.map((name, idx) => (
+                    <option key={idx} value={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
