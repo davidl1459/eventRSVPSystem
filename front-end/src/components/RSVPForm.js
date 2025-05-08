@@ -65,14 +65,19 @@ const RSVPForm = () => {
     }
 
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/rsvp/${token}`, {
+      const res = await axios.post(`${process.env.REACT_APP_API_URL}/rsvp/${token}`, {
         event_id: eventId,
         email,
         response: attendance === 'Yes',
         comment
       });
-
-      setSubmitted(true);
+    
+      if (res.status === 200) {
+        setSubmitted(true);
+      } else {
+        console.error('Unexpected response:', res);
+        alert('Unexpected server response.');
+      }
     } catch (err) {
       console.error('Failed to submit RSVP:', err);
       alert('Submission failed. Please try again.');

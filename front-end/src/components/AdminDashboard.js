@@ -56,6 +56,7 @@ useEffect(() => {
         <div className="admin-sidebar">
           <a href="/dashboard">Home</a>
           <a href="/create">Create Event</a>
+          <a href="/invite">Invite Guests</a>
           <a href="/login">Logout</a>
         </div>
 
@@ -92,8 +93,8 @@ useEffect(() => {
                     </button>
                   </td>
                   <td>{event.title}</td>
-                  <td>{event.date.split('T')[0]}</td>
-                  <td>{event.date.split('T')[1]}</td>
+                  <td>{event.date?.split('T')[0]}</td>
+                  <td>{event.time}</td>
                   <td>{event.location}</td>
                 </tr>
               ))}

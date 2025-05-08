@@ -16,6 +16,7 @@ const AttendanceList = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAttendees(res.data);
+        console.log('Fetched attendance:', res.data); // Debug log
       } catch (err) {
         console.error('Failed to fetch attendance list:', err);
       }
@@ -26,12 +27,13 @@ const AttendanceList = () => {
 
   const filteredAttendees = attendees.filter(att => {
     const matchAttendance =
-      attendanceFilter === 'All' ||
-      (attendanceFilter === 'Yes' ? att.attendance : !att.attendance);
-    const matchEvent = eventFilter === 'All' || att.eventName === eventFilter;
+      attendanceFilter === 'All' || att.attendance === attendanceFilter;
+    const matchEvent =
+      eventFilter === 'All' || att.eventName === eventFilter;
     return matchAttendance && matchEvent;
   });
-
+  
+  
   const uniqueEventNames = Array.from(new Set(attendees.map(att => att.eventName)));
 
   return (
@@ -98,7 +100,7 @@ const AttendanceList = () => {
                     <td>{att.eventName}</td>
                     <td>{att.name}</td>
                     <td>{att.email}</td>
-                    <td>{att.attendance ? 'Yes' : 'No'}</td>
+                    <td>{att.attendance}</td>
                     <td>{att.comment}</td>
                   </tr>
                 ))

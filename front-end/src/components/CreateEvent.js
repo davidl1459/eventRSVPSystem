@@ -55,6 +55,7 @@ const CreateEvent = () => {
         <div className="admin-sidebar">
           <Link to="/dashboard">Home</Link>
           <Link to="/create">Create Event</Link>
+          <Link to="/invite">Invite Guests</Link>
           <Link to="/login">Logout</Link>
         </div>
 

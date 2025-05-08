@@ -23,7 +23,7 @@ app.use('/rsvp', rsvpRoute);
 app.use('/events', eventsRoute);
 app.use('/admin', adminRoute);
 app.use('/attendance', attendanceRoute);
-  
+
 app.listen(port, () => {
   console.log(` Server running at http://localhost:${port}`);
 });

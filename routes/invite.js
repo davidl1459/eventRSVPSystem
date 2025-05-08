@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const db = require('../services/db');
 const verifyToken = require('../middleware/auth');
 
 router.post('/', verifyToken, async (req, res) => {
@@ -11,13 +12,18 @@ router.post('/', verifyToken, async (req, res) => {
   }
 
   try {
-    // Generate token payload
+    // Generate JWT with guest info and event_id
     const payload = { name, gender, status, event_id };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }); // valid for 7 days
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 
-    // Generate RSVP link
+    // Save guest + token to DB (NO event_id stored in DB)
+    await db.execute(
+      `INSERT INTO Guest (name, gender, status, token)
+       VALUES (?, ?, ?, ?)`,
+      [name, gender, status, token]
+    );
+
     const rsvpLink = `http://localhost:3000/rsvp?token=${token}`;
-
     res.status(200).json({
       success: true,
       message: 'RSVP link generated',
