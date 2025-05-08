@@ -1,45 +1,31 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../services/db');
-const { v4: uuidv4 } = require('uuid');
+const jwt = require('jsonwebtoken');
 const verifyToken = require('../middleware/auth');
 
 router.post('/', verifyToken, async (req, res) => {
-  const { name, email, event_id } = req.body;
-  const token = uuidv4();
+  const { name, gender, status, event_id } = req.body;
 
-  if (!name || !email || !event_id) {
-    return res.status(400).json({ success: false, message: 'Missing fields' });
+  if (!name || !gender || !status || !event_id) {
+    return res.status(400).json({ success: false, message: 'Missing guest info or event ID' });
   }
 
   try {
-    // 1. Insert or update guest with token
-    await db.execute(
-      'INSERT INTO Guest (name, email, token) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE token = ?',
-      [name, email, token, token]
-    );
+    // Generate token payload
+    const payload = { name, gender, status, event_id };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' }); // valid for 7 days
 
-    // 2. Get guest_id
-    const [guests] = await db.execute('SELECT guest_id FROM Guest WHERE email = ?', [email]);
-    const guest_id = guests[0].guest_id;
+    // Generate RSVP link
+    const rsvpLink = `http://localhost:3000/rsvp?token=${token}`;
 
-    // 3. Insert into Attendance (if not already exists)
-    await db.execute(
-      'INSERT IGNORE INTO Attendance (guest_id, event_id) VALUES (?, ?)',
-      [guest_id, event_id]
-    );
-
-    // 4. Respond with link
-    const rsvpLink = `http://localhost:3000/rsvp/${token}`;
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      message: 'Guest invited successfully',
+      message: 'RSVP link generated',
       link: rsvpLink
     });
-
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: 'Failed to invite guest' });
+    console.error('Token generation failed:', err);
+    res.status(500).json({ success: false, message: 'Failed to generate link' });
   }
 });
 

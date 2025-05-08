@@ -1,18 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminLogin.css'; // Import the CSS
+import axios from 'axios';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (email === 'admin@example.com' && password === 'admin') {
+
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/admin/login`, {
+        email,
+        password
+      });
+
+      localStorage.setItem('token', response.data.token);
       navigate('/dashboard');
-    } else {
-      alert('Invalid credentials');
+    } catch (err) {
+      alert('Invalid credentials or server error.');
+      console.error(err);
     }
   };
 

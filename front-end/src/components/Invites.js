@@ -1,10 +1,9 @@
 import React, { useContext, useState } from 'react';
-import jwtEncode from 'jwt-encode';
 import Papa from 'papaparse';
+import axios from 'axios';
 import { EventContext } from '../context/EventContext';
 import './Invites.css';
 
-const SECRET_KEY = 'test-secret'; // For development only
 const BASE_URL = window.location.origin;
 
 const Invites = () => {
@@ -25,7 +24,7 @@ const Invites = () => {
         const data = results.data.map(row => ({
           name: row.name,
           gender: row.gender,
-          status: row.status,
+          status: row.status
         }));
         setGuests(data);
         setInviteLinks({});
@@ -34,21 +33,38 @@ const Invites = () => {
     });
   };
 
-  const generateLinks = () => {
+  const generateLinks = async () => {
     if (!selectedEventId) return;
+
+    const token = localStorage.getItem('token');
     const links = {};
 
-    guests.forEach(guest => {
-      const payload = {
-        eventId: parseInt(selectedEventId),
-        name: guest.name,
-        gender: guest.gender,
-        status: guest.status
-      };
-      const token = jwtEncode(payload, SECRET_KEY);
-      const link = `${BASE_URL}/rsvp?token=${token}`;
-      links[guest.name] = link;
-    });
+    for (const guest of guests) {
+      const { name, gender, status } = guest;
+      if (!name || !gender || !status) continue;
+
+      try {
+        const res = await axios.post(
+          `${process.env.REACT_APP_API_URL}/invite`,
+          {
+            name,
+            gender,
+            status,
+            event_id: selectedEventId
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        links[name] = res.data.link;
+      } catch (err) {
+        console.error(`❌ Failed to generate link for ${name}:`, err);
+        links[name] = '❌ Error';
+      }
+    }
 
     setInviteLinks(links);
   };
@@ -76,7 +92,7 @@ const Invites = () => {
           >
             <option value="">-- Choose Event --</option>
             {events.map(event => (
-              <option key={event.id} value={event.id}>{event.name}</option>
+              <option key={event.event_id} value={event.event_id}>{event.title}</option>
             ))}
           </select>
 

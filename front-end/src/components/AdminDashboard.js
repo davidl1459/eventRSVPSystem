@@ -6,7 +6,7 @@ import { EventContext } from '../context/EventContext';
 const AdminDashboard = () => {
   const { events } = useContext(EventContext);
   const [selectedEventId, setSelectedEventId] = useState(null);
-  const selectedEvent = events.find(event => event.id === selectedEventId);
+  const selectedEvent = events.find(event => event.event_id === Number(selectedEventId));
   const navigate = useNavigate();
 
   return (
@@ -34,16 +34,16 @@ const AdminDashboard = () => {
             <tbody>
               {events.map((event) => (
                 <tr
-                  key={event.id}
-                  onClick={() => setSelectedEventId(event.id)}
+                  key={event.event_id}
+                  onClick={() => setSelectedEventId(event.event_id)}
                   className="clickable-row"
                 >
                   <td style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span>{event.id}</span>
+                    <span>{event.event_id}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation(); // prevent row click
-                        navigator.clipboard.writeText(event.id);
+                        navigator.clipboard.writeText(event.event_id);
                       }}
                       className="copy-btn"
                       title="Copy Event ID"
@@ -51,7 +51,7 @@ const AdminDashboard = () => {
                       📋
                     </button>
                   </td>
-                  <td>{event.name}</td>
+                  <td>{event.title}</td>
                   <td>{event.date.split('T')[0]}</td>
                   <td>{event.date.split('T')[1]}</td>
                   <td>{event.location}</td>
