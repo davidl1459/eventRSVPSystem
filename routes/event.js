@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../services/db');
+const verifyToken = require('../middleware/auth');
+
 
 // Create a new event
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const { organizer_id, title, description, date, time, location } = req.body;
 
   if (!organizer_id || !title || !date || !time || !location) {
@@ -24,7 +26,8 @@ router.post('/', async (req, res) => {
 });
 
 // Get all events
-router.get('/', async (req, res) => {
+
+router.get('/', verifyToken, async (req, res) => {
   try {
     const [events] = await db.execute('SELECT * FROM Event');
     res.status(200).json(events);

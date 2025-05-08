@@ -1,3 +1,7 @@
+const express = require('express');
+const router = express.Router();
+const db = require('../services/db');
+
 router.get('/:token', async (req, res) => {
     const { token } = req.params;
     const [guestRows] = await db.execute('SELECT * FROM Guest WHERE token = ?', [token]);
@@ -23,4 +27,7 @@ router.get('/:token', async (req, res) => {
       event: eventRows[0]
     });
   });
+
+  module.exports = router;
+
   
